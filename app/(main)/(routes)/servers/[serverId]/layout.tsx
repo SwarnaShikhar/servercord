@@ -1,21 +1,49 @@
-"use client";
+import { redirectToSignIn } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
-import {
-    QueryClient,
-    QueryClientProvider
-} from "@tanstack/react-query";
-import { useState } from "react";
+import { db } from "@/lib/db";
+import { currentProfile } from "@/lib/current-profile";
+import { ServerSidebar } from "@/components/server/server-sidebar";
 
-export const QueryProvider = ({
-    children
+const ServerIdLayout = async ({
+  children,
+  params,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
+  params: { serverId: string };
 }) => {
-    const [queryClient] = useState(() => new QueryClient());
+  const profile = await currentProfile();
 
-    return (
-        <QueryClientProvider client={queryClient}>
-            {children}
-        </QueryClientProvider>
-    )
+  if (!profile) {
+    return redirectToSignIn();
+  }
+
+  const server = await db.server.findUnique({
+    where: {
+      id: params.serverId,
+      members: {
+        some: {
+          profileId: profile.id
+        }
+      }
+    }
+  });
+
+  if (!server) {
+    return redirect("/");
+  }
+
+  return ( 
+    <div className="h-full">
+      <div 
+      className="hidden md:flex h-full w-60 z-20 flex-col fixed inset-y-0">
+        <ServerSidebar serverId={params.serverId} />
+      </div>
+      <main className="h-full md:pl-60">
+        {children}
+      </main>
+    </div>
+   );
 }
+ 
+export default ServerIdLayout;
