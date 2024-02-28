@@ -13,7 +13,7 @@ const font = Open_Sans({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Servercord',
-  description: 'Connect everyone',
+  description: 'Connects everyone',
 }
 
 export default function RootLayout({
